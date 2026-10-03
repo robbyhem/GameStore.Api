@@ -1,3 +1,5 @@
 <Solution>
+  <Project Path="../AppHost/AppHost.csproj" Id="831609cb-b7b7-43ba-ba6a-cb6f42e32ed7" />
+  <Project Path="../ServiceDefaults/ServiceDefaults.csproj" Id="59159eb8-bb4a-498e-9d91-7ff68d4b13aa" />
   <Project Path="GameStore.Api.csproj" />
 </Solution>
