@@ -14,10 +14,10 @@ namespace GameStore.Api.Data
 
         public static void AddGameStoreDb(this WebApplicationBuilder builder)
         {
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection"); /*var connectionString = "Data Source=GameStore.db";*/
-            builder.Services.AddSqlite<ApplicationDbContext>(
-                connectionString,
-                optionsAction: options => options.UseSeeding((context, _) =>
+            /*var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");*/ /*var connectionString = "Data Source=GameStore.db";*/
+            builder.AddNpgsqlDbContext<ApplicationDbContext>(
+                "GameStoreDb",
+                configureDbContextOptions: options => options.UseSeeding((context, _) =>
                 {
                     if (!context.Set<Genre>().Any())
                     {
