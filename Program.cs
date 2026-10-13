@@ -6,10 +6,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-builder.AddGameStoreDb();
+builder.AddServiceDefaults();
 
-builder.Services.AddHealthChecks();
+builder.Services.AddOpenApi();
+
+builder.AddGameStoreDb();
+builder.AddRedisDistributedCache("redis");
+
+//builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -22,7 +26,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapHealthChecks("/health");
+//app.MapHealthChecks("/health");
+
+app.MapDefaultEndpoints();
 
 app.MapGamesEndpoints();
 app.MapGenresEndpoints();

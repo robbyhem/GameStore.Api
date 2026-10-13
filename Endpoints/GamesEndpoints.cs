@@ -2,7 +2,9 @@
 using GameStore.Api.Dtos;
 using GameStore.Api.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 namespace GameStore.Api.Endpoints
 {
@@ -33,22 +35,52 @@ namespace GameStore.Api.Endpoints
             );
 
             // GET /games/1
-            group.MapGet("/{id}", async (int id, ApplicationDbContext context) =>
+            group.MapGet("/{id}", async (int id, ApplicationDbContext context, IDistributedCache cache, ILogger<Program> logger) =>
             {
-                //var game = games.Find(game => game.Id == id);
+                var cachedJson = await cache.GetStringAsync($"game_{id}");
+                if (cachedJson is not null)
+                {
+                    logger.LogInformation("Game {Id} found in cache", id);
+                    var cachedGame = JsonSerializer.Deserialize<GameDetailsDto>(cachedJson);
+                    return Results.Ok(cachedGame);
+                }
 
+                logger.LogInformation("Game {Id} not found in cache", id);
+
+
+                //var game = games.Find(game => game.Id == id);
 
                 var game = await context.Games.FindAsync(id);
 
-                return game is null ? Results.NotFound() : Results.Ok(
-                    new GameDetailsDto(
-                        game.Id,
-                        game.Name,
-                        game.GenreId,
-                        game.Price,
-                        game.ReleaseDate
-                    )
+                //return game is null ? Results.NotFound() : Results.Ok(
+                //    new GameDetailsDto(
+                //        game.Id,
+                //        game.Name,
+                //        game.GenreId,
+                //        game.Price,
+                //        game.ReleaseDate
+                //    )
+                //);
+
+                if (game is null)
+                {
+                    return Results.NotFound();
+                }
+
+                var gameDto = new GameDetailsDto(
+                    game.Id,
+                    game.Name,
+                    game.GenreId,
+                    game.Price,
+                    game.ReleaseDate
                 );
+
+                await cache.SetStringAsync(/*key:*/ $"game_{id}", /*value:*/ JsonSerializer.Serialize(gameDto), /*options:*/ new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+                });
+
+                return Results.Ok(gameDto);
             }).WithName("GetGame");
 
             // POST /games
